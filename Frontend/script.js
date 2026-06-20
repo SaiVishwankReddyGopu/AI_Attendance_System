@@ -1,7 +1,7 @@
 // script.js - Shared Utilities for AI Attendance System
 
 // ⚠️ Replace this URL with your actual Render backend URL after deploying
-const API_BASE = window.RENDER_API_URL || 'https://ai-attendance-backend.onrender.com/api';
+const API_BASE = 'https://ai-attendance-system-0v7b.onrender.com/api';
 
 // ── Storage helpers ──
 const Store = {
