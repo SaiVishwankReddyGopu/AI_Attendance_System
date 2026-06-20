@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Attendance – AI Attendance System</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🏭</div>
+      <h1>AI Attendance</h1>
+      <p>Attendance Module</p>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" id="nav-back" href="#"><span class="icon">⬅️</span> Back to Dashboard</a>
+      <div class="nav-section-title">Attendance</div>
+      <a class="nav-item active" onclick="showSection('mark')"><span class="icon">✅</span> Mark Attendance</a>
+      <a class="nav-item" onclick="showSection('today')"><span class="icon">📅</span> Today's Log</a>
+      <a class="nav-item" onclick="showSection('history')"><span class="icon">🗓️</span> History</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="sidebar-avatar">U</div>
+        <div>
+          <div class="user-name" id="sidebar-username">User</div>
+          <div class="user-role" id="sidebar-role">Role</div>
+        </div>
+      </div>
+      <button class="btn btn-sm" style="margin-top:.75rem;width:100%;color:#94a3b8;border:1px solid #475569;background:transparent"
+              id="logout-btn">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <!-- MARK ATTENDANCE -->
+    <section id="section-mark">
+      <div class="topbar"><div><h2>✅ Mark Attendance</h2><p id="today-label">Today</p></div></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><h3>Record Attendance</h3></div>
+          <div class="card-body">
+            <div class="alert" id="mark-alert"></div>
+            <div class="form-group">
+              <label>Worker</label>
+              <select id="mark-worker" class="form-control"><option value="">– Select –</option></select>
+            </div>
+            <div class="form-grid">
+              <div class="form-group"><label>Check In *</label>
+                <input type="time" id="mark-in" class="form-control"/></div>
+              <div class="form-group"><label>Check Out</label>
+                <input type="time" id="mark-out" class="form-control"/></div>
+            </div>
+            <div class="form-group"><label>Status</label>
+              <select id="mark-status" class="form-control">
+                <option value="present">Present</option>
+                <option value="absent">Absent</option>
+                <option value="half_day">Half Day</option>
+              </select>
+            </div>
+            <button class="btn btn-success btn-lg btn-block" id="mark-btn" onclick="submitAttendance()">
+              ✅ Submit Attendance
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>Worker Attendance Summary</h3></div>
+          <div class="card-body" id="worker-summary">
+            <p style="color:var(--text-muted);text-align:center;padding:2rem">
+              Select a worker to see their attendance summary.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TODAY'S LOG -->
+    <section id="section-today" style="display:none">
+      <div class="topbar"><div><h2>📅 Today's Attendance Log</h2><p id="today-label2">–</p></div></div>
+      <div class="card">
+        <div class="card-header"><h3>All Workers – Today</h3><button class="btn btn-sm btn-outline" onclick="loadToday()">🔄 Refresh</button></div>
+        <div class="card-body" style="padding:0">
+          <div class="table-wrapper">
+            <table>
+              <thead><tr><th>#</th><th>Worker</th><th>Shift</th><th>Check In</th><th>Check Out</th><th>Hours</th><th>Status</th></tr></thead>
+              <tbody id="today-tbody"><tr><td colspan="7" style="text-align:center;padding:2rem">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section id="section-history" style="display:none">
+      <div class="topbar"><div><h2>🗓️ Attendance History</h2><p>Search by worker</p></div></div>
+      <div class="card" style="margin-bottom:1.5rem">
+        <div class="card-body" style="display:flex;gap:1rem;align-items:flex-end">
+          <div class="form-group" style="flex:1;margin-bottom:0">
+            <label>Select Worker</label>
+            <select id="hist-worker" class="form-control"><option value="">– Select –</option></select>
+          </div>
+          <button class="btn btn-primary" onclick="loadHistory()">🔍 Load History</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3 id="hist-title">History</h3></div>
+        <div class="card-body" style="padding:0">
+          <div class="table-wrapper">
+            <table>
+              <thead><tr><th>#</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Hours</th><th>Status</th></tr></thead>
+              <tbody id="hist-tbody"><tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted)">Select a worker above</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="script.js"></script>
+<script>
+  let workers = [];
+
+  async function init() {
+    const user = Auth.getUser();
+    if (!user) { window.location.href = 'login.html'; return; }
+
+    document.getElementById('nav-back').href = user.role === 'admin' ? 'admin_dashboard.html' : 'worker_dashboard.html';
+    document.getElementById('today-label').textContent  = new Date().toLocaleDateString('en-IN', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    document.getElementById('today-label2').textContent = new Date().toLocaleDateString('en-IN', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+    const res = await api.get('/workers');
+    workers = res.workers;
+    populateSelects(workers);
+    await loadToday();
+  }
+
+  function populateSelects(workers) {
+    const opts = '<option value="">– Select –</option>' + workers.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+    document.getElementById('mark-worker').innerHTML = opts;
+    document.getElementById('hist-worker').innerHTML = opts;
+  }
+
+  document.addEventListener('change', async (e) => {
+    if (e.target.id === 'mark-worker' && e.target.value) {
+      const res = await api.get(`/worker_attendance/${e.target.value}`);
+      const s = res.summary;
+      document.getElementById('worker-summary').innerHTML = `
+        <div class="stats-grid" style="grid-template-columns:1fr 1fr">
+          <div class="stat-card"><div class="stat-icon green">✅</div><div><div class="stat-value">${s.present_days}</div><div class="stat-label">Days Present</div></div></div>
+          <div class="stat-card"><div class="stat-icon blue">📈</div><div><div class="stat-value">${s.attendance_percentage}%</div><div class="stat-label">Attendance Rate</div></div></div>
+        </div>`;
+    }
+  });
+
+  async function submitAttendance() {
+    const alertEl = document.getElementById('mark-alert');
+    const btn = document.getElementById('mark-btn');
+    const workerId = document.getElementById('mark-worker').value;
+    const checkIn  = document.getElementById('mark-in').value;
+    const checkOut = document.getElementById('mark-out').value;
+    const status   = document.getElementById('mark-status').value;
+
+    if (!workerId) return showAlert(alertEl, 'Please select a worker.');
+    setLoading(btn, true);
+    try {
+      await api.post('/mark_attendance', { worker_id: parseInt(workerId), check_in: checkIn, check_out: checkOut, status });
+      showAlert(alertEl, '✅ Attendance recorded!', 'success');
+    } catch (err) {
+      showAlert(alertEl, err.message);
+    } finally {
+      setLoading(btn, false, '✅ Submit Attendance');
+    }
+  }
+
+  async function loadToday() {
+    const tbody = document.getElementById('today-tbody');
+    try {
+      const res = await api.get('/attendance_history');
+      tbody.innerHTML = res.records.length ? res.records.map((r, i) => `
+        <tr><td>${i+1}</td><td>${r.name}</td><td><span class="badge badge-info">${r.shift}</span></td>
+        <td>${formatTime(r.check_in)}</td><td>${formatTime(r.check_out)}</td>
+        <td>${r.working_hours || '-'}${r.working_hours ? 'h' : ''}</td><td>${statusBadge(r.status)}</td></tr>`).join('') :
+        `<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted)">No attendance today</td></tr>`;
+    } catch { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center">Error loading data</td></tr>`; }
+  }
+
+  async function loadHistory() {
+    const wId = document.getElementById('hist-worker').value;
+    if (!wId) return alert('Select a worker first.');
+    const tbody = document.getElementById('hist-tbody');
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem">Loading...</td></tr>`;
+    try {
+      const res = await api.get(`/worker_attendance/${wId}`);
+      const w = workers.find(x => x.id == wId);
+      document.getElementById('hist-title').textContent = w ? `History – ${w.name}` : 'History';
+      tbody.innerHTML = res.records.length ? res.records.map((r, i) => `
+        <tr><td>${i+1}</td><td>${formatDate(r.date)}</td><td>${formatTime(r.check_in)}</td>
+        <td>${formatTime(r.check_out)}</td><td>${r.working_hours || '-'}${r.working_hours ? 'h' : ''}</td>
+        <td>${statusBadge(r.status)}</td></tr>`).join('') :
+        `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted)">No records found</td></tr>`;
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center">${err.message}</td></tr>`;
+    }
+  }
+
+  function showSection(name) {
+    ['mark','today','history'].forEach(s => document.getElementById(`section-${s}`).style.display = s === name ? '' : 'none');
+  }
+
+  init();
+</script>
+</body>
+</html>

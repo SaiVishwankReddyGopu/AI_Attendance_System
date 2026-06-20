@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard – AI Attendance System</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🏭</div>
+      <h1>AI Attendance</h1>
+      <p>Admin Portal</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Dashboard</div>
+      <a class="nav-item active" onclick="showSection('overview')"><span class="icon">📊</span> Overview</a>
+      <a class="nav-item" onclick="showSection('workers')"><span class="icon">👷</span> Workers</a>
+      <a class="nav-item" onclick="showSection('attendance')"><span class="icon">📅</span> Attendance</a>
+      <div class="nav-section-title">AI Tools</div>
+      <a class="nav-item" onclick="showSection('predictions')"><span class="icon">🤖</span> ML Predictions</a>
+      <a class="nav-item" onclick="showSection('insights')"><span class="icon">✨</span> AI Insights</a>
+      <div class="nav-section-title">Manage</div>
+      <a class="nav-item" onclick="showSection('add-worker')"><span class="icon">➕</span> Add Worker</a>
+      <a class="nav-item" onclick="showSection('mark-attendance')"><span class="icon">✅</span> Mark Attendance</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="sidebar-avatar">A</div>
+        <div>
+          <div class="user-name" id="sidebar-username">Admin</div>
+          <div class="user-role" id="sidebar-role">Administrator</div>
+        </div>
+      </div>
+      <button class="btn btn-sm" style="margin-top:.75rem;width:100%;color:#94a3b8;border:1px solid #475569;background:transparent"
+              id="logout-btn">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- ── OVERVIEW ── -->
+    <section id="section-overview">
+      <div class="topbar">
+        <div>
+          <h2>Admin Dashboard</h2>
+          <p id="today-date">Loading...</p>
+        </div>
+        <button class="btn btn-primary" onclick="loadAll()">🔄 Refresh</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon blue">👷</div>
+          <div><div class="stat-value" id="s-total">–</div><div class="stat-label">Total Workers</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">✅</div>
+          <div><div class="stat-value" id="s-present">–</div><div class="stat-label">Present Today</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red">❌</div>
+          <div><div class="stat-value" id="s-absent">–</div><div class="stat-label">Absent Today</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange">⚠️</div>
+          <div><div class="stat-value" id="s-risk">–</div><div class="stat-label">High Risk Workers</div></div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:1.5rem">
+        <div class="card">
+          <div class="card-header"><h3>Today's Attendance Rate</h3></div>
+          <div class="card-body" style="display:flex;justify-content:center">
+            <canvas id="donut-chart" width="220" height="220"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Quick Actions</h3></div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+            <button class="btn btn-success" onclick="showSection('mark-attendance')">✅ Mark Attendance</button>
+            <button class="btn btn-primary" onclick="showSection('predictions')">🤖 Run ML Predictions</button>
+            <button class="btn btn-info" onclick="showSection('insights')">✨ Generate AI Report</button>
+            <button class="btn btn-outline" onclick="showSection('add-worker')">➕ Add New Worker</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── WORKERS ── -->
+    <section id="section-workers" style="display:none">
+      <div class="topbar"><div><h2>👷 Workers</h2><p>All registered workers</p></div>
+        <button class="btn btn-primary" onclick="showSection('add-worker')">➕ Add Worker</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Worker Registry</h3><span id="worker-count" class="badge badge-info">–</span></div>
+        <div class="card-body" style="padding:0">
+          <div class="table-wrapper">
+            <table>
+              <thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Contractor</th><th>Shift</th><th>Username</th><th>Actions</th></tr></thead>
+              <tbody id="workers-tbody"><tr><td colspan="7" style="text-align:center;padding:2rem">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── ATTENDANCE ── -->
+    <section id="section-attendance" style="display:none">
+      <div class="topbar"><div><h2>📅 Today's Attendance</h2><p id="att-date">–</p></div>
+        <button class="btn btn-success" onclick="showSection('mark-attendance')">✅ Mark Attendance</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Attendance Log</h3></div>
+        <div class="card-body" style="padding:0">
+          <div class="table-wrapper">
+            <table>
+              <thead><tr><th>#</th><th>Name</th><th>Shift</th><th>Check In</th><th>Check Out</th><th>Hours</th><th>Status</th></tr></thead>
+              <tbody id="att-tbody"><tr><td colspan="7" style="text-align:center;padding:2rem">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── ML PREDICTIONS ── -->
+    <section id="section-predictions" style="display:none">
+      <div class="topbar"><div><h2>🤖 ML Predictions</h2><p>Random Forest attendance behavior analysis</p></div></div>
+      <div class="alert alert-info show" style="display:block">
+        💡 Click "Predict" next to any worker to run the ML model on their attendance history.
+        <strong>Make sure the model is trained first</strong> (run <code>python ML/train_model.py</code>).
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Worker Predictions</h3></div>
+        <div class="card-body" style="padding:0">
+          <div class="table-wrapper">
+            <table>
+              <thead><tr><th>Worker</th><th>Contractor</th><th>Shift</th><th>Prediction</th><th>Score</th><th>Risk</th><th>Action</th></tr></thead>
+              <tbody id="pred-tbody"><tr><td colspan="7" style="text-align:center;padding:2rem">Loading workers...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── AI INSIGHTS ── -->
+    <section id="section-insights" style="display:none">
+      <div class="topbar"><div><h2>✨ AI Insights</h2><p>Generative AI workforce report</p></div></div>
+      <div class="card">
+        <div class="card-header">
+          <h3>Generate Workforce Report</h3>
+          <button class="btn btn-info" id="gen-btn" onclick="generateInsight()">✨ Generate AI Attendance Report</button>
+        </div>
+        <div class="card-body">
+          <div id="insight-placeholder" style="text-align:center;padding:3rem;color:var(--text-muted)">
+            <div style="font-size:3rem;margin-bottom:1rem">🤖</div>
+            <p>Click the button above to generate an AI-powered workforce attendance report.</p>
+          </div>
+          <div id="insight-content" style="display:none">
+            <div class="ai-report" id="ai-report-text"></div>
+            <p style="margin-top:.75rem;font-size:.8rem;color:var(--text-muted)">
+              ⚡ Generated by AI based on current attendance data
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── ADD WORKER ── -->
+    <section id="section-add-worker" style="display:none">
+      <div class="topbar"><div><h2>➕ Add Worker</h2><p>Register a new worker</p></div></div>
+      <div class="card" style="max-width:600px">
+        <div class="card-header"><h3>Worker Registration Form</h3></div>
+        <div class="card-body">
+          <div class="alert" id="add-alert"></div>
+          <div class="form-grid">
+            <div class="form-group"><label>Full Name *</label>
+              <input type="text" id="aw-name" class="form-control" placeholder="Ramesh Kumar"/></div>
+            <div class="form-group"><label>Phone *</label>
+              <input type="tel" id="aw-phone" class="form-control" placeholder="9876543210"/></div>
+            <div class="form-group"><label>Contractor *</label>
+              <input type="text" id="aw-contractor" class="form-control" placeholder="ABC Contractors"/></div>
+            <div class="form-group"><label>Shift *</label>
+              <select id="aw-shift" class="form-control">
+                <option value="morning">Morning (6AM–2PM)</option>
+                <option value="afternoon">Afternoon (2PM–10PM)</option>
+                <option value="night">Night (10PM–6AM)</option>
+              </select></div>
+            <div class="form-group"><label>Username *</label>
+              <input type="text" id="aw-user" class="form-control" placeholder="ramesh123"/></div>
+            <div class="form-group"><label>Password *</label>
+              <input type="password" id="aw-pass" class="form-control" placeholder="Min 6 chars"/></div>
+          </div>
+          <button class="btn btn-success btn-lg" id="aw-btn" onclick="addWorker()">➕ Register Worker</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── MARK ATTENDANCE ── -->
+    <section id="section-mark-attendance" style="display:none">
+      <div class="topbar"><div><h2>✅ Mark Attendance</h2><p>Record worker check-in / check-out</p></div></div>
+      <div class="card" style="max-width:500px">
+        <div class="card-header"><h3>Attendance Form</h3></div>
+        <div class="card-body">
+          <div class="alert" id="mark-alert"></div>
+          <div class="form-group"><label>Select Worker *</label>
+            <select id="mark-worker" class="form-control"><option value="">– Select –</option></select>
+          </div>
+          <div class="form-grid">
+            <div class="form-group"><label>Check In Time *</label>
+              <input type="time" id="mark-checkin" class="form-control"/></div>
+            <div class="form-group"><label>Check Out Time</label>
+              <input type="time" id="mark-checkout" class="form-control"/></div>
+          </div>
+          <div class="form-group"><label>Status</label>
+            <select id="mark-status" class="form-control">
+              <option value="present">Present</option>
+              <option value="absent">Absent</option>
+              <option value="half_day">Half Day</option>
+            </select>
+          </div>
+          <button class="btn btn-success btn-lg" id="mark-btn" onclick="markAttendance()">✅ Mark Attendance</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="script.js"></script>
+<script>
+  let allWorkers = [];
+  let donutChart = null;
+
+  async function loadAll() {
+    document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-IN', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    document.getElementById('att-date').textContent = new Date().toLocaleDateString('en-IN', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+    try {
+      const [statsRes, workersRes, attRes] = await Promise.all([
+        api.get('/dashboard_stats'),
+        api.get('/workers'),
+        api.get('/attendance_history')
+      ]);
+
+      const stats = statsRes.stats;
+      allWorkers = workersRes.workers;
+
+      document.getElementById('s-total').textContent   = stats.total_workers;
+      document.getElementById('s-present').textContent = stats.today_present;
+      document.getElementById('s-absent').textContent  = stats.today_absent;
+      document.getElementById('s-risk').textContent    = '–';
+
+      renderDonut(stats.today_present, stats.today_absent);
+      renderWorkersTable(allWorkers);
+      renderAttendanceTable(attRes.records);
+      populateWorkerSelect(allWorkers);
+      renderPredictTable(allWorkers);
+    } catch (err) {
+      console.error('[loadAll]', err);
+    }
+  }
+
+  function renderDonut(present, absent) {
+    const ctx = document.getElementById('donut-chart').getContext('2d');
+    if (donutChart) donutChart.destroy();
+    donutChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Present', 'Absent'],
+        datasets: [{ data: [present, absent], backgroundColor: ['#16a34a', '#dc2626'], borderWidth: 0 }]
+      },
+      options: {
+        cutout: '70%', plugins: { legend: { position: 'bottom' } }
+      }
+    });
+  }
+
+  function renderWorkersTable(workers) {
+    document.getElementById('worker-count').textContent = workers.length + ' workers';
+    const tbody = document.getElementById('workers-tbody');
+    tbody.innerHTML = workers.length ? workers.map((w, i) => `
+      <tr>
+        <td>${i+1}</td>
+        <td><strong>${w.name}</strong></td>
+        <td>${w.phone}</td>
+        <td>${w.contractor}</td>
+        <td><span class="badge badge-info">${w.shift}</span></td>
+        <td><code>${w.username}</code></td>
+        <td><button class="btn btn-sm btn-primary" onclick="runPredict(${w.id},'${w.name}')">🤖 Predict</button></td>
+      </tr>`).join('') :
+      `<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted)">No workers found</td></tr>`;
+  }
+
+  function renderAttendanceTable(records) {
+    const tbody = document.getElementById('att-tbody');
+    tbody.innerHTML = records.length ? records.map((r, i) => `
+      <tr>
+        <td>${i+1}</td>
+        <td>${r.name}</td>
+        <td><span class="badge badge-info">${r.shift}</span></td>
+        <td>${formatTime(r.check_in)}</td>
+        <td>${formatTime(r.check_out)}</td>
+        <td>${r.working_hours ? r.working_hours + 'h' : '-'}</td>
+        <td>${statusBadge(r.status)}</td>
+      </tr>`).join('') :
+      `<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted)">No attendance today</td></tr>`;
+  }
+
+  function renderPredictTable(workers) {
+    const tbody = document.getElementById('pred-tbody');
+    tbody.innerHTML = workers.map(w => `
+      <tr id="pred-row-${w.id}">
+        <td><strong>${w.name}</strong></td>
+        <td>${w.contractor}</td>
+        <td>${w.shift}</td>
+        <td id="pred-label-${w.id}"><span class="badge badge-secondary">Not run</span></td>
+        <td id="pred-score-${w.id}">–</td>
+        <td id="pred-risk-${w.id}">–</td>
+        <td><button class="btn btn-sm btn-primary" onclick="runPredict(${w.id},'${w.name}')">▶ Predict</button></td>
+      </tr>`).join('') ||
+      `<tr><td colspan="7" style="text-align:center;padding:2rem">No workers</td></tr>`;
+  }
+
+  async function runPredict(workerId, workerName) {
+    const labelEl = document.getElementById(`pred-label-${workerId}`);
+    const scoreEl = document.getElementById(`pred-score-${workerId}`);
+    const riskEl  = document.getElementById(`pred-risk-${workerId}`);
+    if (labelEl) labelEl.innerHTML = '<span class="spinner" style="border-color:#2563eb;border-top-color:#2563eb"></span>';
+
+    try {
+      const res = await api.get(`/predict/${workerId}`);
+      if (labelEl) {
+        const colorMap = { 'Regular Worker': 'success', 'Irregular Attendance': 'warning', 'High Absence Risk': 'danger', 'Insufficient Data': 'secondary' };
+        const col = colorMap[res.prediction] || 'secondary';
+        labelEl.innerHTML = `<span class="badge badge-${col}">${res.prediction}</span>`;
+        scoreEl.innerHTML = `<strong>${res.attendance_score}%</strong>`;
+        riskEl.innerHTML  = riskBadge(res.risk_level);
+        document.getElementById('s-risk').textContent =
+          parseInt(document.getElementById('s-risk').textContent || '0') + (res.risk_level === 'High' ? 1 : 0);
+      }
+    } catch (err) {
+      if (labelEl) labelEl.innerHTML = `<span class="badge badge-danger">Error</span>`;
+      alert('Prediction failed: ' + err.message + '\n\nMake sure the ML model is trained and the backend is running.');
+    }
+  }
+
+  function populateWorkerSelect(workers) {
+    const sel = document.getElementById('mark-worker');
+    sel.innerHTML = '<option value="">– Select Worker –</option>' +
+      workers.map(w => `<option value="${w.id}">${w.name} (${w.shift})</option>`).join('');
+  }
+
+  async function addWorker() {
+    const alertEl = document.getElementById('add-alert');
+    const btn = document.getElementById('aw-btn');
+    const fields = {
+      name: document.getElementById('aw-name').value.trim(),
+      phone: document.getElementById('aw-phone').value.trim(),
+      contractor: document.getElementById('aw-contractor').value.trim(),
+      shift: document.getElementById('aw-shift').value,
+      username: document.getElementById('aw-user').value.trim(),
+      password: document.getElementById('aw-pass').value.trim()
+    };
+    for (const [k, v] of Object.entries(fields)) {
+      if (!v) return showAlert(alertEl, `'${k}' is required.`);
+    }
+    setLoading(btn, true);
+    try {
+      await api.post('/register', fields);
+      showAlert(alertEl, '✅ Worker added successfully!', 'success');
+      Object.keys(fields).forEach(k => document.getElementById(`aw-${k === 'name' ? 'name' : k === 'phone' ? 'phone' : k === 'contractor' ? 'contractor' : k === 'shift' ? 'shift' : k === 'username' ? 'user' : 'pass'}`).value = '');
+      await loadAll();
+    } catch (err) {
+      showAlert(alertEl, err.message);
+    } finally {
+      setLoading(btn, false, '➕ Register Worker');
+    }
+  }
+
+  async function markAttendance() {
+    const alertEl = document.getElementById('mark-alert');
+    const btn = document.getElementById('mark-btn');
+    const workerId = document.getElementById('mark-worker').value;
+    const checkIn  = document.getElementById('mark-checkin').value;
+    const checkOut = document.getElementById('mark-checkout').value;
+    const status   = document.getElementById('mark-status').value;
+
+    if (!workerId) return showAlert(alertEl, 'Please select a worker.');
+    if (!checkIn && status !== 'absent') return showAlert(alertEl, 'Check-in time is required.');
+
+    setLoading(btn, true);
+    try {
+      await api.post('/mark_attendance', { worker_id: parseInt(workerId), check_in: checkIn, check_out: checkOut, status });
+      showAlert(alertEl, '✅ Attendance marked successfully!', 'success');
+      await loadAll();
+    } catch (err) {
+      showAlert(alertEl, err.message);
+    } finally {
+      setLoading(btn, false, '✅ Mark Attendance');
+    }
+  }
+
+  async function generateInsight() {
+    const btn = document.getElementById('gen-btn');
+    setLoading(btn, true);
+    document.getElementById('insight-placeholder').style.display = '';
+    document.getElementById('insight-content').style.display = 'none';
+
+    try {
+      const res = await api.get('/generate_insight');
+      document.getElementById('ai-report-text').textContent = res.insight;
+      document.getElementById('insight-placeholder').style.display = 'none';
+      document.getElementById('insight-content').style.display = '';
+    } catch (err) {
+      alert('Could not generate insight: ' + err.message);
+    } finally {
+      setLoading(btn, false, '✨ Generate AI Attendance Report');
+    }
+  }
+
+  function showSection(name) {
+    const sections = ['overview','workers','attendance','predictions','insights','add-worker','mark-attendance'];
+    sections.forEach(s => {
+      document.getElementById(`section-${s}`).style.display = s === name ? '' : 'none';
+    });
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    const navItems = document.querySelectorAll('.nav-item');
+    const idx = ['overview','workers','attendance','predictions','insights','add-worker','mark-attendance'].indexOf(name);
+    if (navItems[idx]) navItems[idx].classList.add('active');
+  }
+
+  requireAuth('admin');
+  loadAll();
+</script>
+</body>
+</html>

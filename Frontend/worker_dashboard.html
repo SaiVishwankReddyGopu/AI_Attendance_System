@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Worker Dashboard – AI Attendance System</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🏭</div>
+      <h1>AI Attendance</h1>
+      <p>Worker Portal</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Menu</div>
+      <a class="nav-item active" onclick="showSection('overview')">
+        <span class="icon">📊</span> Overview
+      </a>
+      <a class="nav-item" onclick="showSection('history')">
+        <span class="icon">📅</span> Attendance History
+      </a>
+      <a class="nav-item" onclick="showSection('hours')">
+        <span class="icon">⏱️</span> Working Hours
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="sidebar-avatar">W</div>
+        <div>
+          <div class="user-name" id="sidebar-username">Worker</div>
+          <div class="user-role" id="sidebar-role">Worker</div>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm" style="margin-top:.75rem;width:100%;color:#94a3b8;border-color:#475569"
+              id="logout-btn">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- OVERVIEW SECTION -->
+    <section id="section-overview">
+      <div class="topbar">
+        <div>
+          <h2>Welcome back, <span id="worker-name">Worker</span> 👋</h2>
+          <p id="today-date">Loading date...</p>
+        </div>
+      </div>
+
+      <!-- Profile card -->
+      <div class="profile-card" style="margin-bottom:1.5rem">
+        <div class="profile-avatar">👷</div>
+        <div>
+          <div class="profile-name" id="profile-name">–</div>
+          <div class="profile-meta" id="profile-meta">–</div>
+        </div>
+      </div>
+
+      <!-- Stats row -->
+      <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+        <div class="stat-card">
+          <div class="stat-icon blue">📅</div>
+          <div>
+            <div class="stat-value" id="stat-total">–</div>
+            <div class="stat-label">Total Days Recorded</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">✅</div>
+          <div>
+            <div class="stat-value" id="stat-present">–</div>
+            <div class="stat-label">Days Present</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange">⏱️</div>
+          <div>
+            <div class="stat-value" id="stat-hours">–</div>
+            <div class="stat-label">Total Hours Worked</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple">📈</div>
+          <div>
+            <div class="stat-value" id="stat-pct">–</div>
+            <div class="stat-label">Attendance %</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attendance circle + recent -->
+      <div class="grid-2" style="margin-top:1.5rem">
+        <div class="card">
+          <div class="card-header"><h3>Attendance Rate</h3></div>
+          <div class="card-body attendance-circle">
+            <div class="circle-chart">
+              <svg viewBox="0 0 140 140" width="140" height="140" id="circle-svg">
+                <circle class="bg" cx="70" cy="70" r="60"/>
+                <circle class="fg" cx="70" cy="70" r="60" stroke-dasharray="377" stroke-dashoffset="377"/>
+              </svg>
+              <div class="circle-value" id="circle-pct">0%</div>
+            </div>
+            <p style="margin-top:1rem;color:var(--text-muted);font-size:.875rem" id="circle-label">Loading...</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>Recent Attendance</h3></div>
+          <div class="card-body" style="padding:0">
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Date</th><th>Check In</th><th>Status</th></tr></thead>
+                <tbody id="recent-tbody">
+                  <tr><td colspan="3" style="text-align:center;padding:2rem;color:var(--text-muted)">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HISTORY SECTION -->
+    <section id="section-history" style="display:none">
+      <div class="topbar"><div><h2>📅 Attendance History</h2><p>Your full attendance record</p></div></div>
+      <div class="card">
+        <div class="card-header"><h3>All Records</h3></div>
+        <div class="card-body" style="padding:0">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr><th>#</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Hours</th><th>Status</th></tr>
+              </thead>
+              <tbody id="history-tbody">
+                <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted)">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOURS SECTION -->
+    <section id="section-hours" style="display:none">
+      <div class="topbar"><div><h2>⏱️ Working Hours</h2><p>Your shift timing breakdown</p></div></div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon blue">⏱️</div>
+          <div><div class="stat-value" id="hw-total">–</div><div class="stat-label">Total Hours</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">📅</div>
+          <div><div class="stat-value" id="hw-avg">–</div><div class="stat-label">Avg Hours/Day</div></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:1.5rem">
+        <div class="card-header"><h3>Hours by Day</h3></div>
+        <div class="card-body" style="padding:0">
+          <div class="table-wrapper">
+            <table>
+              <thead><tr><th>Date</th><th>Check In</th><th>Check Out</th><th>Hours Worked</th></tr></thead>
+              <tbody id="hours-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="script.js"></script>
+<script>
+  let workerData = {};
+  let attendanceRecords = [];
+
+  async function init() {
+    const user = requireAuth('worker');
+    if (!user) return;
+
+    // Update topbar
+    document.getElementById('worker-name').textContent = user.name || user.username;
+    document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-IN', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+    await loadWorkerData(user.worker_id);
+  }
+
+  async function loadWorkerData(workerId) {
+    try {
+      const [workerRes, attRes] = await Promise.all([
+        api.get(`/worker/${workerId}`),
+        api.get(`/worker_attendance/${workerId}`)
+      ]);
+
+      workerData = workerRes.worker;
+      attendanceRecords = attRes.records;
+      const summary = attRes.summary;
+
+      // Profile
+      document.getElementById('profile-name').textContent = workerData.name;
+      document.getElementById('profile-meta').textContent =
+        `📞 ${workerData.phone}  |  🏢 ${workerData.contractor}  |  🕐 ${workerData.shift} shift`;
+
+      // Stats
+      document.getElementById('stat-total').textContent   = summary.total_days || 0;
+      document.getElementById('stat-present').textContent = summary.present_days || 0;
+      document.getElementById('stat-hours').textContent   = (summary.total_working_hours || 0).toFixed(1) + 'h';
+      const pct = summary.attendance_percentage || 0;
+      document.getElementById('stat-pct').textContent     = pct + '%';
+
+      // Circle
+      document.getElementById('circle-pct').textContent = pct + '%';
+      document.getElementById('circle-label').textContent = pct >= 85 ? '🟢 Excellent attendance' : pct >= 70 ? '🟡 Needs improvement' : '🔴 Low attendance';
+      drawCircle(document.getElementById('circle-svg'), pct);
+
+      // Recent 5 records
+      renderRecentTable(attendanceRecords.slice(0, 5));
+      renderHistoryTable(attendanceRecords);
+      renderHoursSection(attendanceRecords, summary);
+
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function renderRecentTable(records) {
+    const tbody = document.getElementById('recent-tbody');
+    if (!records.length) {
+      tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:2rem;color:var(--text-muted)">No records found</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = records.map(r => `
+      <tr>
+        <td>${formatDate(r.date)}</td>
+        <td>${formatTime(r.check_in)}</td>
+        <td>${statusBadge(r.status)}</td>
+      </tr>`).join('');
+  }
+
+  function renderHistoryTable(records) {
+    const tbody = document.getElementById('history-tbody');
+    if (!records.length) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted)">No records found</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = records.map((r, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${formatDate(r.date)}</td>
+        <td>${formatTime(r.check_in)}</td>
+        <td>${formatTime(r.check_out)}</td>
+        <td>${r.working_hours ? r.working_hours + 'h' : '-'}</td>
+        <td>${statusBadge(r.status)}</td>
+      </tr>`).join('');
+  }
+
+  function renderHoursSection(records, summary) {
+    document.getElementById('hw-total').textContent = (summary.total_working_hours || 0).toFixed(1) + 'h';
+    const avg = summary.present_days > 0 ? (summary.total_working_hours / summary.present_days).toFixed(1) : '0.0';
+    document.getElementById('hw-avg').textContent = avg + 'h';
+
+    const tbody = document.getElementById('hours-tbody');
+    const withHours = records.filter(r => r.working_hours > 0);
+    tbody.innerHTML = withHours.length ? withHours.map(r => `
+      <tr>
+        <td>${formatDate(r.date)}</td>
+        <td>${formatTime(r.check_in)}</td>
+        <td>${formatTime(r.check_out)}</td>
+        <td><strong>${r.working_hours}h</strong></td>
+      </tr>`).join('') :
+      `<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-muted)">No hours data</td></tr>`;
+  }
+
+  function showSection(name) {
+    ['overview','history','hours'].forEach(s => {
+      document.getElementById(`section-${s}`).style.display = s === name ? '' : 'none';
+    });
+    document.querySelectorAll('.nav-item').forEach((el, i) => {
+      el.classList.toggle('active', ['overview','history','hours'][i] === name);
+    });
+  }
+
+  init();
+</script>
+</body>
+</html>

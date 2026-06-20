@@ -1,0 +1,28 @@
+services:
+  # ── Backend: Flask API ──────────────────────────────────────────
+  - type: web
+    name: ai-attendance-backend
+    runtime: python
+    rootDir: Backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    envVars:
+      - key: DATABASE_URL
+        sync: false          # Paste your Supabase connection string here
+      - key: SECRET_KEY
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false          # Optional
+      - key: CORS_ORIGINS
+        value: "*"           # Update to your frontend URL after deploying
+
+  # ── Frontend: Static Site ───────────────────────────────────────
+  - type: web
+    name: ai-attendance-frontend
+    runtime: static
+    rootDir: Frontend
+    staticPublishPath: .
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache

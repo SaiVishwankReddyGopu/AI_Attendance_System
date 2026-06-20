@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Attendance System</title>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    body { background: linear-gradient(135deg,#1e3a5f,#2563eb); color:#fff; }
+    .hero {
+      min-height:100vh; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; text-align:center; padding:2rem;
+    }
+    .hero-icon { font-size:5rem; margin-bottom:1.5rem; }
+    .hero h1 { font-size:2.8rem; font-weight:800; margin-bottom:.75rem; }
+    .hero p  { font-size:1.15rem; opacity:.85; max-width:520px; margin:0 auto 2.5rem; }
+    .hero-btns { display:flex; gap:1rem; flex-wrap:wrap; justify-content:center; }
+    .btn-white { background:#fff; color:#1e40af; font-weight:700; }
+    .btn-white:hover { background:#e0e7ff; }
+    .btn-ghost { background:rgba(255,255,255,.12); color:#fff; border:2px solid rgba(255,255,255,.3); }
+    .btn-ghost:hover { background:rgba(255,255,255,.22); }
+    .features {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:1.5rem; max-width:960px; margin:3rem auto 0; text-align:left;
+    }
+    .feature-card {
+      background:rgba(255,255,255,.08); border-radius:12px;
+      padding:1.5rem; border:1px solid rgba(255,255,255,.12);
+    }
+    .feature-card .fi { font-size:2rem; margin-bottom:.75rem; }
+    .feature-card h4 { font-size:1rem; font-weight:700; margin-bottom:.4rem; }
+    .feature-card p  { font-size:.875rem; opacity:.75; line-height:1.5; }
+  </style>
+</head>
+<body>
+<div class="hero">
+  <div class="hero-icon">🏭</div>
+  <h1>AI Attendance System</h1>
+  <p>Intelligent workforce attendance management powered by Machine Learning and Generative AI — built for blue-collar workers.</p>
+  <div class="hero-btns">
+    <a href="login.html" class="btn btn-white btn-lg">🔐 Login</a>
+    <a href="login.html#register" class="btn btn-ghost btn-lg">📋 Register Worker</a>
+  </div>
+
+  <div class="features">
+    <div class="feature-card">
+      <div class="fi">📊</div>
+      <h4>Real-Time Tracking</h4>
+      <p>Mark attendance with check-in/check-out times and automatic working hour calculation.</p>
+    </div>
+    <div class="feature-card">
+      <div class="fi">🤖</div>
+      <h4>ML Predictions</h4>
+      <p>Random Forest model classifies workers as Regular, Irregular, or High Absence Risk.</p>
+    </div>
+    <div class="feature-card">
+      <div class="fi">✨</div>
+      <h4>AI Insights</h4>
+      <p>Generate natural-language workforce reports automatically using GPT AI integration.</p>
+    </div>
+    <div class="feature-card">
+      <div class="fi">🔐</div>
+      <h4>Role-Based Access</h4>
+      <p>Separate dashboards for Workers and Admins/Supervisors with secure authentication.</p>
+    </div>
+  </div>
+</div>
+<script>
+  // Redirect logged-in users
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  if (user) {
+    window.location.href = user.role === 'admin' ? 'admin_dashboard.html' : 'worker_dashboard.html';
+  }
+</script>
+</body>
+</html>

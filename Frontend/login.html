@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login – AI Attendance System</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <span class="icon">🏭</span>
+      <h2>AI Attendance System</h2>
+      <p>Blue Collar Workforce Management</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" onclick="switchTab('login')">Login</div>
+      <div class="auth-tab" id="tab-register" onclick="switchTab('register')">Register Worker</div>
+    </div>
+
+    <!-- Alert -->
+    <div class="alert" id="alert"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="form-login">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="login-user" class="form-control" placeholder="Enter username"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-pass" class="form-control" placeholder="Enter password"/>
+      </div>
+      <div class="form-group">
+        <label>Login As</label>
+        <select id="login-role" class="form-control">
+          <option value="worker">Worker</option>
+          <option value="admin">Admin / Supervisor</option>
+        </select>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" id="login-btn" onclick="doLogin()">
+        🔐 Login
+      </button>
+      <p style="text-align:center;margin-top:1rem;font-size:.85rem;color:#64748b;">
+        Default Admin: <strong>admin / admin123</strong>
+      </p>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="form-register" style="display:none">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="reg-name" class="form-control" placeholder="Ramesh Kumar"/>
+        </div>
+        <div class="form-group">
+          <label>Phone *</label>
+          <input type="tel" id="reg-phone" class="form-control" placeholder="9876543210"/>
+        </div>
+        <div class="form-group">
+          <label>Contractor *</label>
+          <input type="text" id="reg-contractor" class="form-control" placeholder="ABC Contractors"/>
+        </div>
+        <div class="form-group">
+          <label>Shift *</label>
+          <select id="reg-shift" class="form-control">
+            <option value="morning">Morning (6AM–2PM)</option>
+            <option value="afternoon">Afternoon (2PM–10PM)</option>
+            <option value="night">Night (10PM–6AM)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Username *</label>
+          <input type="text" id="reg-user" class="form-control" placeholder="ramesh123"/>
+        </div>
+        <div class="form-group">
+          <label>Password *</label>
+          <input type="password" id="reg-pass" class="form-control" placeholder="Min 6 chars"/>
+        </div>
+      </div>
+      <button class="btn btn-success btn-block btn-lg" id="reg-btn" onclick="doRegister()">
+        📋 Register Worker
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+<script>
+  // Switch to register tab if URL hash says so
+  if (window.location.hash === '#register') switchTab('register');
+
+  function switchTab(tab) {
+    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+    document.getElementById('form-login').style.display    = tab === 'login'    ? '' : 'none';
+    document.getElementById('form-register').style.display = tab === 'register' ? '' : 'none';
+    document.getElementById('alert').classList.remove('show');
+  }
+
+  async function doLogin() {
+    const alertEl = document.getElementById('alert');
+    const btn = document.getElementById('login-btn');
+    const username = document.getElementById('login-user').value.trim();
+    const password = document.getElementById('login-pass').value.trim();
+
+    if (!username || !password) {
+      return showAlert(alertEl, 'Please enter username and password.');
+    }
+
+    setLoading(btn, true);
+    try {
+      const data = await api.post('/login', { username, password });
+      Store.set('user', { ...data, username });
+      showAlert(alertEl, 'Login successful! Redirecting...', 'success');
+      setTimeout(() => {
+        window.location.href = data.role === 'admin' ? 'admin_dashboard.html' : 'worker_dashboard.html';
+      }, 800);
+    } catch (err) {
+      showAlert(alertEl, err.message || 'Login failed. Check credentials.');
+    } finally {
+      setLoading(btn, false, '🔐 Login');
+    }
+  }
+
+  async function doRegister() {
+    const alertEl = document.getElementById('alert');
+    const btn = document.getElementById('reg-btn');
+    const fields = {
+      name: document.getElementById('reg-name').value.trim(),
+      phone: document.getElementById('reg-phone').value.trim(),
+      contractor: document.getElementById('reg-contractor').value.trim(),
+      shift: document.getElementById('reg-shift').value,
+      username: document.getElementById('reg-user').value.trim(),
+      password: document.getElementById('reg-pass').value.trim()
+    };
+
+    for (const [k, v] of Object.entries(fields)) {
+      if (!v) return showAlert(alertEl, `Field '${k}' is required.`);
+    }
+    if (fields.password.length < 6) return showAlert(alertEl, 'Password must be at least 6 characters.');
+
+    setLoading(btn, true);
+    try {
+      const data = await api.post('/register', fields);
+      showAlert(alertEl, '✅ Worker registered! You can now login.', 'success');
+      setTimeout(() => switchTab('login'), 2000);
+    } catch (err) {
+      showAlert(alertEl, err.message || 'Registration failed.');
+    } finally {
+      setLoading(btn, false, '📋 Register Worker');
+    }
+  }
+
+  // Enter key support
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const activeTab = document.getElementById('tab-login').classList.contains('active');
+      if (activeTab) doLogin(); else doRegister();
+    }
+  });
+</script>
+</body>
+</html>
